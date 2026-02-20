@@ -1,0 +1,1022 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Kontrollprotokolle – Dashboard</title>
+  <style>
+    :root{
+      --bg:#070B14;
+      --panel:#0C1222;
+      --panel2:#0F1730;
+      --border:#1E2A4A;
+      --border2:#26345C;
+      --text:#EAF1FF;
+      --muted:#A7B8DD;
+      --muted2:#7F95C9;
+      --accent:#4C7DFF;
+      --accent2:#2D5BFF;
+      --ok:#22C55E;
+      --bad:#EF4444;
+      --warn:#F59E0B;
+      --shadow: 0 18px 50px rgba(0,0,0,.35);
+      --radius:18px;
+      --radius2:14px;
+      --pad:16px;
+      --pad2:12px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background:
+        radial-gradient(1200px 800px at 20% -10%, rgba(76,125,255,.18), transparent 60%),
+        radial-gradient(900px 700px at 95% 20%, rgba(34,197,94,.10), transparent 60%),
+        radial-gradient(700px 600px at 40% 110%, rgba(245,158,11,.10), transparent 60%),
+        var(--bg);
+      color:var(--text);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    }
+    a{color:inherit}
+    .wrap{max-width:1260px;margin:0 auto;padding:22px}
+    .top{
+      display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;
+      margin-bottom:14px;
+    }
+    .brand{
+      display:flex;gap:12px;align-items:flex-start;
+    }
+    .logo{
+      width:44px;height:44px;border-radius:14px;
+      background:linear-gradient(135deg, rgba(76,125,255,.95), rgba(45,91,255,.55));
+      box-shadow:0 14px 40px rgba(76,125,255,.22);
+      border:1px solid rgba(255,255,255,.08);
+      display:grid;place-items:center;
+    }
+    .logo svg{opacity:.95}
+    h1{margin:0;font-size:18px;letter-spacing:.2px}
+    .sub{margin-top:6px;color:var(--muted);font-size:13px;line-height:1.35}
+    .badges{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+    .badge{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:8px 10px;border-radius:999px;border:1px solid var(--border);
+      background:rgba(12,18,34,.75);
+      color:var(--muted);
+      font-size:12px;
+      backdrop-filter: blur(8px);
+    }
+    .dot{width:8px;height:8px;border-radius:99px;background:var(--muted2)}
+    .dot.ok{background:var(--ok)}
+    .dot.bad{background:var(--bad)}
+    .dot.warn{background:var(--warn)}
+    .grid{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:14px;
+    }
+    @media(min-width:1020px){ .grid{grid-template-columns:420px 1fr} }
+
+    .card{
+      background:linear-gradient(180deg, rgba(15,23,48,.92), rgba(12,18,34,.92));
+      border:1px solid rgba(255,255,255,.06);
+      box-shadow: var(--shadow);
+      border-radius: var(--radius);
+      padding: var(--pad);
+      position:relative;
+      overflow:hidden;
+    }
+    .card:before{
+      content:"";
+      position:absolute;inset:-2px;
+      background:radial-gradient(500px 300px at 10% 0%, rgba(76,125,255,.18), transparent 60%);
+      pointer-events:none;
+      opacity:.9;
+    }
+    .card > *{position:relative}
+    .sectionTitle{
+      font-size:13px;
+      color:#CFE0FF;
+      letter-spacing:.25px;
+      display:flex;align-items:center;gap:10px;
+      margin-bottom:10px;
+    }
+    .sectionTitle .pill{
+      font-size:11px;color:var(--muted);
+      border:1px solid var(--border);
+      padding:5px 8px;border-radius:999px;
+      background:rgba(7,11,20,.35)
+    }
+    .divider{height:1px;background:rgba(255,255,255,.08);margin:12px 0}
+
+    /* Protocol tiles */
+    .tiles{display:grid;gap:10px}
+    .tile{
+      display:flex;gap:12px;align-items:center;
+      padding:12px 12px;
+      border-radius: var(--radius2);
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(7,11,20,.45);
+      cursor:pointer;
+      transition: transform .12s ease, border-color .12s ease, background .12s ease;
+    }
+    .tile:hover{transform: translateY(-1px); border-color: rgba(76,125,255,.35); background:rgba(7,11,20,.55)}
+    .tile.active{
+      border-color: rgba(76,125,255,.65);
+      box-shadow: 0 14px 40px rgba(76,125,255,.12);
+      background:linear-gradient(135deg, rgba(76,125,255,.14), rgba(7,11,20,.55));
+    }
+    .ico{
+      width:42px;height:42px;border-radius:14px;display:grid;place-items:center;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(12,18,34,.55);
+    }
+    .tile.active .ico{background:rgba(76,125,255,.15); border-color: rgba(76,125,255,.40)}
+    .tile .twrap{min-width:0}
+    .tile .t{font-weight:900;font-size:13px}
+    .tile .d{margin-top:4px;color:var(--muted);font-size:12px;line-height:1.25}
+    .tile .go{
+      margin-left:auto;
+      font-size:12px;color:#CFE0FF;
+      border:1px solid rgba(255,255,255,.10);
+      padding:6px 10px;border-radius:999px;
+      background:rgba(12,18,34,.55);
+      white-space:nowrap;
+    }
+    .tile.active .go{border-color: rgba(76,125,255,.45); background:rgba(76,125,255,.12)}
+
+    /* Inputs */
+    label{display:block;color:#C1D3FF;font-size:12px;margin:10px 0 6px}
+    .req::after{content:" *";color:#FFB3B3}
+    input,select,textarea{
+      width:100%;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(7,11,20,.55);
+      color:var(--text);
+      padding:11px 12px;
+      outline:none;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.0);
+      transition: border-color .12s ease, transform .12s ease;
+    }
+    input:focus,select:focus,textarea:focus{border-color: rgba(76,125,255,.65)}
+    textarea{min-height:110px;resize:vertical}
+
+    .topbar{display:grid;grid-template-columns:1fr;gap:10px}
+    @media(min-width:600px){ .topbar{grid-template-columns:1fr 1fr} }
+
+    /* Buttons */
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .btn{
+      display:inline-flex;align-items:center;gap:10px;
+      border-radius: 14px;
+      padding:11px 14px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(12,18,34,.55);
+      color:var(--text);
+      cursor:pointer;
+      font-weight:900;
+      transition: transform .12s ease, border-color .12s ease, background .12s ease;
+      user-select:none;
+    }
+    .btn:hover{transform: translateY(-1px); border-color: rgba(255,255,255,.18); background:rgba(12,18,34,.70)}
+    .btn.primary{
+      border-color: rgba(76,125,255,.55);
+      background:linear-gradient(135deg, rgba(76,125,255,.35), rgba(45,91,255,.15));
+      box-shadow: 0 16px 45px rgba(76,125,255,.14);
+    }
+    .btn.primary:hover{border-color: rgba(76,125,255,.75)}
+    .btn.ghost{background:rgba(7,11,20,.45)}
+    .btn.danger{border-color: rgba(239,68,68,.35); background:rgba(239,68,68,.10)}
+    .btn.small{padding:9px 12px;font-weight:800}
+    .btn svg{opacity:.95}
+
+    .status{
+      margin-top:10px;
+      font-size:12.5px;
+      color:var(--muted);
+      padding:10px 12px;
+      border:1px dashed rgba(255,255,255,.14);
+      border-radius:14px;
+      background:rgba(7,11,20,.35);
+      line-height:1.35;
+    }
+    .status.ok{border-color: rgba(34,197,94,.35); color:#BFF5CF}
+    .status.bad{border-color: rgba(239,68,68,.35); color:#FFC1C1}
+
+    .adminBox .rowItem{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(7,11,20,.45);
+      margin-top:8px;
+    }
+    .adminBox .rowItem b{font-size:12.5px}
+    .adminBox .rowItem .meta{color:var(--muted);font-size:11.5px;margin-top:4px}
+    .mono{font-family:var(--mono)}
+    .rightHeader{
+      display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;
+      margin-bottom:4px;
+    }
+    .hint{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.35;
+    }
+
+    /* Temperature table */
+    .tablewrap{
+      overflow:auto;
+      border:1px solid rgba(255,255,255,.10);
+      border-radius: 16px;
+      background:rgba(7,11,20,.45);
+    }
+    table{border-collapse:collapse;min-width:820px;width:100%}
+    th,td{border-bottom:1px solid rgba(255,255,255,.08);padding:10px;text-align:left;font-size:12.5px}
+    th{
+      color:#CFE0FF;
+      background:rgba(12,18,34,.85);
+      position:sticky;top:0;z-index:1;
+    }
+    tr:last-child td{border-bottom:none}
+    .tdev{font-weight:900}
+    .radioChip{
+      display:inline-flex;align-items:center;gap:8px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(12,18,34,.45);
+      border-radius:999px;
+      padding:6px 10px;
+    }
+    .radioChip input{width:16px;height:16px}
+    .dangerNote{
+      margin-top:10px;
+      border-left:4px solid var(--warn);
+      padding:10px 12px;
+      background:rgba(245,158,11,.10);
+      border-radius: 14px;
+      color:#FFE6B5;
+      font-size:12px;
+      line-height:1.35;
+    }
+
+    /* Hidden select for compatibility */
+    .srOnly{position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2l8 4v6c0 5-3.4 9.4-8 10-4.6-.6-8-5-8-10V6l8-4Z" stroke="white" stroke-width="1.6"/>
+            <path d="M8.2 12.2l2.3 2.3 5.4-5.4" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <h1>Kontrollprotokolle – Dashboard</h1>
+          <div class="sub">
+            Alles in einer Oberfläche: <b>Schädlinge</b>, <b>Reinigung</b>, <b>Kühltemperaturen (Grid)</b>, <b>Belehrung</b>.<br/>
+            Speichern → landet in <span class="mono">Firestore</span> (DB) und ist später exportierbar.
+          </div>
+        </div>
+      </div>
+
+      <div class="badges">
+        <div class="badge"><span class="dot" id="dotDb"></span><span id="dbBadge">DB: —</span></div>
+        <div class="badge"><span class="dot ok"></span><span>GitHub Pages: OK</span></div>
+        <div class="badge"><span class="dot warn"></span><span class="mono" id="lastSaveBadge">Last: —</span></div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- LEFT -->
+      <div class="card">
+        <div class="sectionTitle">
+          Protokoll wählen <span class="pill">1/2</span>
+        </div>
+
+        <!-- kept for old logic -->
+        <label class="srOnly" for="formSelect">Formular</label>
+        <select id="formSelect" class="srOnly"></select>
+
+        <div class="tiles" id="tiles"></div>
+
+        <div class="divider"></div>
+
+        <div class="sectionTitle">
+          Kopf-Daten <span class="pill">2/2</span>
+        </div>
+
+        <div class="topbar">
+          <div>
+            <label class="req" for="metaDate">Datum</label>
+            <input id="metaDate" type="date" />
+          </div>
+          <div>
+            <label for="metaTime">Uhrzeit</label>
+            <input id="metaTime" type="time" />
+          </div>
+        </div>
+
+        <label for="metaBy">Verantwortlich / Kürzel</label>
+        <input id="metaBy" type="text" placeholder="z.B. OS / RS" />
+
+        <label for="metaNote">Allgemeine Bemerkung</label>
+        <textarea id="metaNote" placeholder="Optional: irgendwat Wichtiges allgemein…"></textarea>
+
+        <div class="actions">
+          <button class="btn primary" id="btnSave" type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M19 21H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h11l5 5v9a2 2 0 0 1-2 2Z" stroke="white" stroke-width="1.6"/>
+              <path d="M17 21v-8H7v8" stroke="white" stroke-width="1.6"/>
+              <path d="M7 3v4h8" stroke="white" stroke-width="1.6"/>
+            </svg>
+            Speichern
+          </button>
+
+          <button class="btn ghost" id="btnReset" type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M3 12a9 9 0 0 1 15.5-6.4" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
+              <path d="M18 3v5h-5" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M21 12a9 9 0 0 1-15.5 6.4" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
+              <path d="M6 21v-5h5" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Reset
+          </button>
+        </div>
+
+        <div id="status" class="status">Bereit. Protokoll anklicken – Felder erscheinen rechts.</div>
+
+        <div class="divider"></div>
+
+        <div class="sectionTitle">
+          Admin <span class="pill">Quickview</span>
+        </div>
+        <div class="hint">
+          Letzte Einträge laden (nur wenn Firestore Rules Lesen erlauben). Für’s Amt später Export, aber erst mal: laufen lassen.
+        </div>
+
+        <div class="actions">
+          <button class="btn small" id="btnLoadLast" type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M4 4h16v16H4V4Z" stroke="white" stroke-width="1.6"/>
+              <path d="M8 8h8M8 12h8M8 16h6" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+            Letzte 10
+          </button>
+          <button class="btn small" id="btnCopyJSON" type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M8 8h12v12H8V8Z" stroke="white" stroke-width="1.6"/>
+              <path d="M4 4h12v4" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+            JSON kopieren
+          </button>
+          <button class="btn small danger" id="btnClearAdmin" type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M3 6h18" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
+              <path d="M8 6V4h8v2" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
+              <path d="M7 6l1 16h8l1-16" stroke="white" stroke-width="1.6" stroke-linejoin="round"/>
+            </svg>
+            Leeren
+          </button>
+        </div>
+
+        <div id="adminBox" class="adminBox"></div>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="card">
+        <div class="rightHeader">
+          <div>
+            <div class="sectionTitle">Eingabe</div>
+            <div class="hint" id="formMetaLinks"></div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div id="fields" class="row"></div>
+
+        <div id="tempGridBox" style="display:none">
+          <div class="divider"></div>
+          <div class="sectionTitle">Kühltemperaturen – Grid</div>
+          <div class="hint">
+            Pro Gerät eine Temperatur wählen. Wenn Gerät heute nicht dran: „—“ lassen.
+          </div>
+
+          <div class="tablewrap" style="margin-top:10px">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:28%">Gerät</th>
+                  <th>—</th>
+                  <th>-18 °C</th>
+                  <th>-5 °C</th>
+                  <th>4/5 °C</th>
+                  <th>8 °C</th>
+                </tr>
+              </thead>
+              <tbody id="tempTbody"></tbody>
+            </table>
+          </div>
+
+          <div class="dangerNote">
+            Wenn irgendwo <b>8 °C</b>: bitte kurz Maßnahme in „Bemerkung“ (Tür offen, Ware umgelagert, Nachmessung, …).
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="hint">
+          Tipp: Auf Handy wirkt dit wie ’ne App. Auf PC wie ’n sauberes Dashboard – genau dit wollten wa. 😄
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import {
+      getFirestore, collection, addDoc, serverTimestamp,
+      query, orderBy, limit, getDocs
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    // ✅ HIER EINTRAGEN (Firebase -> Project Settings -> Web App)
+    const firebaseConfig = {
+      apiKey: "REPLACE_ME",
+      authDomain: "REPLACE_ME",
+      projectId: "REPLACE_ME",
+      storageBucket: "REPLACE_ME",
+      messagingSenderId: "REPLACE_ME",
+      appId: "REPLACE_ME"
+    };
+
+    const GOOGLE_FORMS = {
+      pests: "https://docs.google.com/forms/d/e/1FAIpQLSeeqdi94Z0KDsJsWcOzcAJ9R1x8htANPKwXEYxBgooVXl15nA/viewform?usp=dialog",
+      cleaning: "https://docs.google.com/forms/d/e/1FAIpQLSf-G1uEtn7MLzrGylCcACOlVDWtBaYKBSfdogs9aRr4p2lIdQ/viewform?usp=dialog",
+      temps: "https://docs.google.com/forms/d/e/1FAIpQLSdEBIZuuxJflMCmGMjJgZ95DSvwBazmiDue7crlxRKke3SI6A/viewform?usp=dialog",
+      briefing: "https://docs.google.com/forms/d/e/1FAIpQLScwc6VYGa_f1zciMVFnJ9DyBki3FNdTi4q47KAh97iYe5o_Xg/viewform?usp=dialog"
+    };
+
+    const TEMP_DEVICES = [
+      "Gefrierschrank 1 Lager",
+      "Gefrierschrank 2 Lager",
+      "Kühlschrank Lager",
+      "Kühl-/Gefrierkombi Küche (Normal)",
+      "Kühl-/Gefrierkombi Küche (TK)",
+      "Bierkühlung Tresen"
+    ];
+    const TEMP_CHOICES = ["-18 °C", "-5 °C", "4/5 °C", "8 °C"];
+
+    const FORMS = [
+      {
+        key: "pests",
+        title: 'Schädlingskontrolle (wöchentlich)',
+        desc: "Räume auswählen, Ergebnis dokumentieren, bei Mängeln Maßnahme notieren.",
+        link: GOOGLE_FORMS.pests,
+        icon: "bug",
+        sections: [
+          { title: "Kontrolle", fields: [
+            { key:"datumKontrolle", label:"Datum der Kontrolle", type:"date", required:true },
+            { key:"raum", label:"Räume", type:"select", required:true, options:[
+              "Küche","Gasträume","Gäste WC","Personal WC","Terassenbereich","Bierkeller","Kühlung"
+            ]},
+            { key:"ergebnis", label:"Kontrollergebnis", type:"select", required:true, options:["ohne Mängel","Mängel"]},
+            { key:"bemerkung", label:"Bemerkungen / Maßnahme", type:"textarea", required:false,
+              placeholder:"Wenn Mängel: Was genau? Wo? Was wurde getan?" }
+          ]}
+        ]
+      },
+      {
+        key: "cleaning",
+        title: "Reinigungs- & Desinfektionsplan",
+        desc: "Wer hat wann was gereinigt? Räume + Mittel + Bemerkung.",
+        link: GOOGLE_FORMS.cleaning,
+        icon: "spray",
+        sections: [
+          { title: "Durchführung", fields: [
+            { key:"verantwortlich", label:"Verantwortliche Person", type:"select", required:true, options:[
+              "Oliver Schönrock","Ronny Schönrock"
+            ]},
+            { key:"datum", label:"Datum", type:"date", required:true },
+            { key:"uhrzeit", label:"Uhrzeit", type:"time", required:true },
+            { key:"raeume", label:"Räume", type:"multiselect", required:true, options:[
+              "Küche","Kühlung","Personal WC","Gäste WC","Tresen","Gasträume","Keller","Bierkeller"
+            ]},
+            { key:"mittel", label:"Reinigungsmittel / Desinfektionsmittel", type:"select", required:true, options:[
+              "Oberflächenreinigung (Wasser / Reinigungsmittel)",
+              "Flächendesinfektion",
+              "Glasreiniger",
+              "Alkohol- / Glanzreiniger"
+            ]},
+            { key:"bemerkungen", label:"Bemerkungen", type:"textarea", required:false,
+              placeholder:"Optional: Nacharbeit, Besonderheiten..." }
+          ]}
+        ]
+      },
+      {
+        key: "temps",
+        title: 'Kühltemperaturen (Grid)',
+        desc: "Mehrere Geräte in einem Rutsch – wie im Google-Form.",
+        link: GOOGLE_FORMS.temps,
+        icon: "snow",
+        sections: [
+          { title: "Kontrolle", fields: [
+            { key:"kontrolleur", label:"Kontrolle durchgeführt von", type:"select", required:true, options:[
+              "Ronny Schönrock","Oliver Schönrock"
+            ]},
+            { key:"bemerkung", label:"Bemerkungen (optional)", type:"textarea", required:false,
+              placeholder:"z.B. Auffälligkeit, Tür stand offen, Nachkontrolle geplant…" }
+          ]}
+        ]
+      },
+      {
+        key: "briefing",
+        title: "Belehrung (IFSG/ABS/LH)",
+        desc: "Unterweisung auswählen und Anwesenheit dokumentieren.",
+        link: GOOGLE_FORMS.briefing,
+        icon: "shield",
+        sections: [
+          { title: "Belehrung", fields: [
+            { key:"unterweisung", label:"Welche Unterweisung wurde durchgeführt", type:"select", required:true,
+              options:["IFSG","ABS","Lebensmittelhygiene"] },
+            { key:"mitarbeiter", label:"Welche Mitarbeiter waren anwesend?", type:"multiselect", required:false,
+              options:["Oliver Schönrock","Ronny Schönrock"] },
+            { key:"bemerkung", label:"Bemerkung (optional)", type:"textarea", required:false,
+              placeholder:"Optional: Inhalte/Schwerpunkte, Hinweis Unterschrift, ..." }
+          ]}
+        ]
+      }
+    ];
+
+    // --- UI hooks
+    const el = (id) => document.getElementById(id);
+    const formSelect = el("formSelect");
+    const tilesWrap = el("tiles");
+    const fieldsWrap = el("fields");
+    const statusEl = el("status");
+    const adminBox = el("adminBox");
+    const formMetaLinks = el("formMetaLinks");
+
+    const dotDb = el("dotDb");
+    const dbBadge = el("dbBadge");
+    const lastSaveBadge = el("lastSaveBadge");
+
+    const tempGridBox = el("tempGridBox");
+    const tempTbody = el("tempTbody");
+
+    let db = null;
+    let lastRowsCache = [];
+    let tempSelections = {}; // {device: value|null}
+
+    function setStatus(msg, kind=""){
+      statusEl.className = "status " + (kind === "ok" ? "ok" : kind === "bad" ? "bad" : "");
+      statusEl.textContent = msg;
+    }
+    function setDb(ok, msg){
+      dotDb.className = "dot " + (ok ? "ok" : "bad");
+      dbBadge.textContent = "DB: " + msg;
+    }
+    function setLastSave(txt){ lastSaveBadge.textContent = "Last: " + (txt || "—"); }
+
+    function pad(n){ return String(n).padStart(2,"0"); }
+    function todayISO(){
+      const d = new Date();
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    }
+    function nowTime(){
+      const d = new Date();
+      return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+    function isoNow(){ return new Date().toISOString(); }
+
+    function currentForm(){
+      return FORMS.find(f => f.key === formSelect.value) || FORMS[0];
+    }
+
+    function iconSVG(kind){
+      const common = 'width="20" height="20" viewBox="0 0 24 24" fill="none"';
+      if (kind === "bug") return `<svg ${common}><path d="M9 9h6M10 13h4" stroke="white" stroke-width="1.6" stroke-linecap="round"/><path d="M12 8c-3 0-5 2.2-5 5v2c0 3 2 5 5 5s5-2 5-5v-2c0-2.8-2-5-5-5Z" stroke="white" stroke-width="1.6"/><path d="M8 6l-2-2M16 6l2-2M7 12H4M20 12h-3M7 16H4M20 16h-3" stroke="white" stroke-width="1.6" stroke-linecap="round"/></svg>`;
+      if (kind === "spray") return `<svg ${common}><path d="M10 3h4v3h-4V3Z" stroke="white" stroke-width="1.6"/><path d="M9 6h6l1 3H8l1-3Z" stroke="white" stroke-width="1.6"/><path d="M9 9v11a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V9" stroke="white" stroke-width="1.6"/><path d="M18 8c1.5 0 2.5-1 2.5-2.5S19.5 3 18 3" stroke="white" stroke-width="1.6" stroke-linecap="round"/><path d="M18 12h3" stroke="white" stroke-width="1.6" stroke-linecap="round"/></svg>`;
+      if (kind === "snow") return `<svg ${common}><path d="M12 2v20M4 7l16 10M20 7L4 17" stroke="white" stroke-width="1.6" stroke-linecap="round"/><path d="M12 2l3 3M12 2l-3 3M12 22l3-3M12 22l-3-3" stroke="white" stroke-width="1.6" stroke-linecap="round"/></svg>`;
+      return `<svg ${common}><path d="M12 2l8 4v6c0 5-3.4 9.4-8 10-4.6-.6-8-5-8-10V6l8-4Z" stroke="white" stroke-width="1.6"/><path d="M9 12l2 2 4-5" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    }
+
+    function renderSelectOptions(){
+      formSelect.innerHTML = "";
+      FORMS.forEach(f => {
+        const opt = document.createElement("option");
+        opt.value = f.key;
+        opt.textContent = f.title;
+        formSelect.appendChild(opt);
+      });
+    }
+
+    function renderTiles(){
+      tilesWrap.innerHTML = "";
+      FORMS.forEach(f => {
+        const div = document.createElement("div");
+        div.className = "tile";
+        div.dataset.key = f.key;
+        div.innerHTML = `
+          <div class="ico" aria-hidden="true">${iconSVG(f.icon)}</div>
+          <div class="twrap">
+            <div class="t">${f.title}</div>
+            <div class="d">${f.desc}</div>
+          </div>
+          <div class="go">Öffnen</div>
+        `;
+        div.addEventListener("click", () => {
+          formSelect.value = f.key;
+          highlightActiveTile();
+          renderFields();
+        });
+        tilesWrap.appendChild(div);
+      });
+      highlightActiveTile();
+    }
+
+    function highlightActiveTile(){
+      const key = formSelect.value;
+      [...tilesWrap.querySelectorAll(".tile")].forEach(t => {
+        t.classList.toggle("active", t.dataset.key === key);
+      });
+    }
+
+    function renderMetaLinks(){
+      const f = currentForm();
+      formMetaLinks.innerHTML = `
+        <div class="hint">
+          <span class="badge" style="padding:6px 10px; border-radius:999px; display:inline-flex; gap:8px">
+            <span class="dot ok"></span><span>${f.title}</span>
+          </span>
+          &nbsp;&nbsp;
+          <a class="hint" href="${f.link}" target="_blank" rel="noopener">Original Google Form öffnen</a>
+        </div>
+      `;
+    }
+
+    function fieldNode(field){
+      const wrap = document.createElement("div");
+
+      const lab = document.createElement("label");
+      lab.textContent = field.label;
+      if (field.required) lab.classList.add("req");
+      wrap.appendChild(lab);
+
+      let node;
+      if (field.type === "textarea"){
+        node = document.createElement("textarea");
+        if (field.placeholder) node.placeholder = field.placeholder;
+      } else if (field.type === "select"){
+        node = document.createElement("select");
+        (field.options || []).forEach(v => {
+          const o = document.createElement("option");
+          o.value = v; o.textContent = v;
+          node.appendChild(o);
+        });
+      } else if (field.type === "multiselect"){
+        node = document.createElement("div");
+        node.style.display = "grid";
+        node.style.gap = "8px";
+        (field.options || []).forEach(v => {
+          const line = document.createElement("div");
+          line.className = "radioChip";
+          line.style.borderRadius = "14px";
+          line.style.padding = "10px 12px";
+          line.style.justifyContent = "flex-start";
+
+          const cb = document.createElement("input");
+          cb.type = "checkbox";
+          cb.dataset.key = field.key;
+          cb.value = v;
+
+          const span = document.createElement("div");
+          span.textContent = v;
+
+          line.appendChild(cb);
+          line.appendChild(span);
+          node.appendChild(line);
+        });
+      } else {
+        node = document.createElement("input");
+        node.type = field.type || "text";
+      }
+
+      node.dataset.key = field.key;
+      node.dataset.type = field.type || node.type;
+      node.dataset.required = field.required ? "1" : "0";
+
+      wrap.appendChild(node);
+      return wrap;
+    }
+
+    function renderTempGrid(){
+      tempTbody.innerHTML = "";
+      tempSelections = {};
+      TEMP_DEVICES.forEach((device, i) => {
+        tempSelections[device] = null;
+
+        const tr = document.createElement("tr");
+
+        const tdDev = document.createElement("td");
+        tdDev.innerHTML = `<div class="tdev">${device}</div>`;
+        tr.appendChild(tdDev);
+
+        // none
+        tr.appendChild(tdRadio(device, "", `none_${i}`));
+
+        TEMP_CHOICES.forEach((choice, j) => {
+          tr.appendChild(tdRadio(device, choice, `c_${i}_${j}`));
+        });
+
+        tempTbody.appendChild(tr);
+      });
+    }
+    function tdRadio(device, value, idSuffix){
+      const td = document.createElement("td");
+      const id = `t_${idSuffix}`;
+
+      const wrap = document.createElement("div");
+      wrap.className = "radioChip";
+
+      const r = document.createElement("input");
+      r.type = "radio";
+      r.name = `temp_${device}`;
+      r.id = id;
+      r.value = value;
+      r.addEventListener("change", () => {
+        tempSelections[device] = value || null;
+      });
+
+      const lab = document.createElement("label");
+      lab.setAttribute("for", id);
+      lab.style.margin = "0";
+      lab.style.color = "var(--text)";
+      lab.style.cursor = "pointer";
+      lab.textContent = value === "" ? "—" : value;
+
+      wrap.appendChild(r);
+      wrap.appendChild(lab);
+      td.appendChild(wrap);
+      return td;
+    }
+
+    function renderFields(){
+      const f = currentForm();
+      fieldsWrap.innerHTML = "";
+
+      f.sections.forEach(sec => {
+        const head = document.createElement("div");
+        head.style.gridColumn = "1 / -1";
+        head.innerHTML = `<div class="sectionTitle">${sec.title}</div>`;
+        fieldsWrap.appendChild(head);
+
+        sec.fields.forEach(field => fieldsWrap.appendChild(fieldNode(field)));
+
+        const div = document.createElement("div");
+        div.style.gridColumn = "1 / -1";
+        div.innerHTML = `<div class="divider"></div>`;
+        fieldsWrap.appendChild(div);
+      });
+
+      // layout: dense forms become 2 columns on wide screens
+      const count = f.sections.reduce((a,s)=>a+s.fields.length,0);
+      fieldsWrap.className = (count >= 6) ? "row two" : "row";
+
+      if (f.key === "temps"){
+        tempGridBox.style.display = "block";
+        renderTempGrid();
+      } else {
+        tempGridBox.style.display = "none";
+        tempSelections = {};
+      }
+
+      renderMetaLinks();
+      setStatus(`Ausgewählt: ${f.title}.`, "");
+      highlightActiveTile();
+    }
+
+    function validate(){
+      if (!el("metaDate").value) return { ok:false, msg:"Datum fehlt." };
+
+      const f = currentForm();
+
+      for (const sec of f.sections){
+        for (const field of sec.fields){
+          if (!field.required) continue;
+
+          if (field.type === "multiselect"){
+            const boxes = [...fieldsWrap.querySelectorAll(`input[type="checkbox"][data-key="${field.key}"]`)];
+            const any = boxes.some(b => b.checked);
+            if (!any) return { ok:false, msg:`Pflichtfeld leer: ${field.label}` };
+            continue;
+          }
+
+          const node = fieldsWrap.querySelector(`[data-key="${field.key}"]`);
+          if (!node) continue;
+          const val = (node.value ?? "").trim();
+          if (!val) return { ok:false, msg:`Pflichtfeld leer: ${field.label}` };
+        }
+      }
+
+      // pests: if Mängel then remark required
+      if (f.key === "pests"){
+        const ergebnis = fieldsWrap.querySelector('[data-key="ergebnis"]')?.value || "";
+        const bem = fieldsWrap.querySelector('[data-key="bemerkung"]');
+        if (ergebnis === "Mängel" && bem && !String(bem.value||"").trim()){
+          return { ok:false, msg:"Bei 'Mängel' bitte Bemerkung/Maßnahme dokumentieren." };
+        }
+      }
+
+      // temps: at least 1 selected; if any 8°C then remark required
+      if (f.key === "temps"){
+        const any = Object.values(tempSelections).some(v => v !== null);
+        if (!any) return { ok:false, msg:"Bitte mindestens ein Gerät im Temperatur-Grid auswählen." };
+
+        const any8 = Object.values(tempSelections).some(v => v === "8 °C");
+        const remark = fieldsWrap.querySelector('[data-key="bemerkung"]')?.value || "";
+        if (any8 && !String(remark).trim()){
+          return { ok:false, msg:"Bei 8 °C bitte eine Bemerkung/Maßnahme eintragen." };
+        }
+      }
+
+      return { ok:true };
+    }
+
+    function collectPayload(){
+      const f = currentForm();
+      const payload = {
+        createdAtIso: isoNow(),
+        meta: {
+          date: el("metaDate").value || "",
+          time: el("metaTime").value || "",
+          by: el("metaBy").value || "",
+          note: el("metaNote").value || ""
+        },
+        form: { key: f.key, title: f.title, googleFormLink: f.link },
+        data: {},
+        extras: {}
+      };
+
+      f.sections.forEach(sec => {
+        sec.fields.forEach(field => {
+          if (field.type === "multiselect"){
+            const boxes = [...fieldsWrap.querySelectorAll(`input[type="checkbox"][data-key="${field.key}"]`)];
+            payload.data[field.key] = boxes.filter(b => b.checked).map(b => b.value);
+          } else {
+            const node = fieldsWrap.querySelector(`[data-key="${field.key}"]`);
+            payload.data[field.key] = node ? (node.value ?? "") : "";
+          }
+        });
+      });
+
+      if (f.key === "temps"){
+        const grid = {};
+        const list = [];
+        TEMP_DEVICES.forEach(dev => {
+          const v = tempSelections[dev] || null;
+          grid[dev] = v;
+          if (v !== null) list.push({ device: dev, temp: v });
+        });
+        payload.extras.temperatureGrid = grid;
+        payload.extras.temperatureList = list;
+      }
+
+      return payload;
+    }
+
+    async function saveToDB(){
+      const v = validate();
+      if (!v.ok){
+        setStatus("❌ " + v.msg, "bad");
+        return;
+      }
+      if (!db){
+        setStatus("❌ Keine DB Verbindung (firebaseConfig prüfen).", "bad");
+        return;
+      }
+
+      const payload = collectPayload();
+
+      try{
+        const ref = await addDoc(collection(db, "submissions"), {
+          ...payload,
+          serverTimestamp: serverTimestamp()
+        });
+        setLastSave(`#${ref.id.slice(0,6)}…`);
+        setStatus("✅ Gespeichert! (Firestore) – dit sitzt.", "ok");
+      }catch(e){
+        setStatus("❌ Speichern fehlgeschlagen: " + (e?.message || String(e)), "bad");
+      }
+    }
+
+    function resetAll(){
+      el("metaDate").value = todayISO();
+      el("metaTime").value = nowTime();
+      el("metaBy").value = "";
+      el("metaNote").value = "";
+
+      fieldsWrap.querySelectorAll("input,textarea,select").forEach(node => {
+        if (node.type === "checkbox") node.checked = false;
+        else if (node.tagName === "SELECT") node.selectedIndex = 0;
+        else node.value = "";
+      });
+
+      if (currentForm().key === "temps") renderTempGrid();
+
+      setStatus("Zurückgesetzt. Nächste Kontrolle, wa.", "");
+    }
+
+    async function loadLast10(){
+      if (!db){
+        setStatus("❌ Keine DB Verbindung.", "bad");
+        return;
+      }
+      try{
+        const q = query(collection(db, "submissions"), orderBy("serverTimestamp","desc"), limit(10));
+        const snap = await getDocs(q);
+        const rows = [];
+        snap.forEach(doc => rows.push({ id: doc.id, ...doc.data() }));
+        lastRowsCache = rows;
+
+        adminBox.innerHTML = "";
+        if (!rows.length){
+          adminBox.innerHTML = `<div class="status">Noch keine Einträge.</div>`;
+          return;
+        }
+
+        rows.forEach(r => {
+          const item = document.createElement("div");
+          item.className = "rowItem";
+          const t = r.form?.title || "—";
+          const d = r.meta?.date || "";
+          const by = r.meta?.by || "";
+          item.innerHTML = `
+            <div style="min-width:0">
+              <b>${t}</b>
+              <div class="meta">${d} • ${by} • <span class="mono">${String(r.id).slice(0,10)}…</span></div>
+            </div>
+            <div class="badge" style="padding:6px 10px"><span class="dot ok"></span><span>OK</span></div>
+          `;
+          adminBox.appendChild(item);
+        });
+
+        setStatus("✅ Letzte 10 geladen.", "ok");
+      }catch(e){
+        setStatus("❌ Laden fehlgeschlagen (Rules?): " + (e?.message || String(e)), "bad");
+      }
+    }
+
+    async function copyLastJSON(){
+      if (!lastRowsCache.length){
+        setStatus("Erst 'Letzte 10' laden, sonst hab ick nüscht zum Kopieren 😄", "");
+        return;
+      }
+      const txt = JSON.stringify(lastRowsCache, null, 2);
+      try{
+        await navigator.clipboard.writeText(txt);
+        setStatus("✅ JSON kopiert.", "ok");
+      }catch{
+        setStatus("Kopieren ging nich (Browser zickt).", "");
+      }
+    }
+
+    // Init Firebase
+    try{
+      const app = initializeApp(firebaseConfig);
+      db = getFirestore(app);
+    }catch(e){
+      db = null;
+    }
+
+    function initDbBadge(){
+      if (db){
+        setDb(true, "Verbunden");
+      } else {
+        setDb(false, "Nicht verbunden");
+        setStatus("❌ firebaseConfig fehlt/kaputt. Erst eintragen, dann läuft’s.", "bad");
+      }
+    }
+
+    // init UI
+    renderSelectOptions();
+    el("metaDate").value = todayISO();
+    el("metaTime").value = nowTime();
+    formSelect.value = FORMS[0].key;
+    renderTiles();
+    renderFields();
+    initDbBadge();
+
+    // Bind buttons
+    el("btnSave").addEventListener("click", saveToDB);
+    el("btnReset").addEventListener("click", resetAll);
+    el("btnLoadLast").addEventListener("click", loadLast10);
+    el("btnCopyJSON").addEventListener("click", copyLastJSON);
+    el("btnClearAdmin").addEventListener("click", () => { adminBox.innerHTML=""; lastRowsCache=[]; });
+
+    // keep select change in sync (rare)
+    formSelect.addEventListener("change", () => { highlightActiveTile(); renderFields(); });
+  </script>
+</body>
+</html>
