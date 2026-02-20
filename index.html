@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Kontrollprotokolle – All in One</title>
+  <style>
+    :root{
+      --bg:#0b1220; --card:#121a2b; --line:#223055; --muted:#9fb2d9;
+      --text:#e7eefc; --accent:#3b82f6; --ok:#22c55e; --bad:#ef4444;
+    }
+    body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    .wrap{max-width:1200px;margin:0 auto;padding:22px}
+    header{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start}
+    h1{margin:0;font-size:20px}
+    .sub{color:var(--muted);font-size:13px;line-height:1.35;margin-top:6px}
+    .pill{display:inline-block;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:#101a31;color:#cfe0ff;font-size:12px}
+    .grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:14px}
+    @media(min-width:980px){.grid{grid-template-columns:430px 1fr}}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.22)}
+    label{display:block;color:#b8c7e6;font-size:13px;margin:10px 0 6px}
+    input,select,textarea{
+      width:100%;box-sizing:border-box;
+      padding:11px 12px;border-radius:12px;border:1px solid #2b3a61;
+      background:#0f1728;color:var(--text);outline:none;
+    }
+    textarea{min-height:110px;resize:vertical}
+    .row{display:grid;grid-template-columns:1fr;gap:10px}
+    @media(min-width:740px){.row.two{grid-template-columns:1fr 1fr}}
+    button{
+      border:1px solid #2e4bb0;background:#17306f;color:var(--text);
+      padding:11px 14px;border-radius:12px;font-weight:800;cursor:pointer;
+    }
+    button:hover{filter:brightness(1.06)}
+    button.secondary{background:#0f1728;border-color:#2b3a61}
+    button.danger{background:#3a1010;border-color:#7a1e1e}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .divider{height:1px;background:var(--line);margin:12px 0}
+    .hint{font-size:12px;color:var(--muted);line-height:1.35}
+    .status{margin-top:10px;font-size:13px;color:var(--muted)}
+    .status.ok{color:#9ff2b8}
+    .status.bad{color:#ffb0b0}
+    .req::after{content:" *";color:#ffb0b0}
+    .sectionTitle{margin:4px 0 0;font-size:14px;color:#cfe0ff}
+    .mini{font-size:12px;color:var(--muted)}
+    .topbar{display:flex;gap:10px;flex-wrap:wrap}
+    .topbar > *{flex:1}
+    .smallbtn{padding:10px 12px;font-weight:700}
+    .kpi{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+    .kpi .box{background:#0f1728;border:1px solid #2b3a61;border-radius:12px;padding:10px}
+    .kpi .box .t{font-size:12px;color:var(--muted)}
+    .kpi .box .v{font-size:16px;font-weight:800;margin-top:4px}
+    .link{color:#cfe0ff;text-decoration:none}
+    .link:hover{text-decoration:underline}
+    .chip{display:inline-block;background:#0f1728;border:1px solid #2b3a61;border-radius:999px;padding:6px 10px;font-size:12px;color:#cfe0ff}
+    .gridlist{display:grid;gap:8px}
+    .checkline{display:flex;gap:10px;align-items:center;background:#0f1728;border:1px solid #2b3a61;border-radius:12px;padding:10px}
+    .checkline input{width:18px;height:18px}
+    .muted{color:var(--muted)}
+    code{color:#cfe0ff}
+
+    /* Temperature grid */
+    .tablewrap{overflow:auto;border:1px solid #2b3a61;border-radius:12px;background:#0f1728}
+    table{border-collapse:collapse;min-width:780px;width:100%}
+    th,td{border-bottom:1px solid #223055;padding:10px;text-align:left;font-size:13px}
+    th{color:#cfe0ff;background:#0b1220;position:sticky;top:0;z-index:1}
+    tr:last-child td{border-bottom:none}
+    .tdev{font-weight:800}
+    .radioRow{display:flex;gap:12px;flex-wrap:wrap}
+    .radioChip{display:flex;align-items:center;gap:8px;border:1px solid #2b3a61;background:#0b1220;border-radius:999px;padding:6px 10px}
+    .radioChip input{width:16px;height:16px}
+    .dangerNote{border-left:4px solid var(--bad);padding:10px 12px;background:#2a1111;border-radius:12px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Kontrollprotokolle – All-in-One <span class="pill">GitHub Pages + Firestore</span></h1>
+        <div class="sub">
+          Formular wählen → ausfüllen → speichern. Alles wird sauber protokolliert (Zeitstempel + Inhalt).<br/>
+          <span class="mini">Mit Temperatur-Grid: mehrere Geräte in einem Rutsch, wie im Original-Formular.</span>
+        </div>
+      </div>
+      <div class="pill">Paul-Style: locker, aber korrekt ✅</div>
+    </header>
+
+    <div class="grid">
+      <!-- LEFT -->
+      <div class="card">
+        <div class="sectionTitle">1) Protokoll auswählen</div>
+        <label class="req" for="formSelect">Formular</label>
+        <select id="formSelect"></select>
+
+        <div id="formMetaLinks" class="hint" style="margin-top:10px"></div>
+
+        <div class="kpi">
+          <div class="box">
+            <div class="t">DB Status</div>
+            <div class="v" id="dbStatus">—</div>
+          </div>
+          <div class="box">
+            <div class="t">Letzter Save</div>
+            <div class="v" id="lastSave">—</div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="sectionTitle">2) Kopf-Daten (fürs Protokoll)</div>
+        <div class="topbar">
+          <div>
+            <label class="req" for="metaDate">Datum</label>
+            <input id="metaDate" type="date" />
+          </div>
+          <div>
+            <label for="metaTime">Uhrzeit</label>
+            <input id="metaTime" type="time" />
+          </div>
+        </div>
+
+        <label for="metaBy">Verantwortlich / Kürzel</label>
+        <input id="metaBy" type="text" placeholder="z.B. Oliver / Ronny / OS / RS" />
+
+        <label for="metaNote">Allgemeine Bemerkung</label>
+        <textarea id="metaNote" placeholder="Optional: irgendwat Wichtiges allgemein…"></textarea>
+
+        <div class="actions">
+          <button id="btnSave">Speichern (DB)</button>
+          <button id="btnReset" class="secondary" type="button">Zurücksetzen</button>
+        </div>
+
+        <div id="status" class="status">Bereit. Wähl oben ein Formular aus, wa.</div>
+
+        <div class="divider"></div>
+
+        <div class="sectionTitle">Admin-Quickview</div>
+        <div class="hint">
+          Letzte Einträge laden (nur wenn deine Firestore Rules Lesen erlauben).
+        </div>
+        <div class="actions">
+          <button id="btnLoadLast" class="secondary smallbtn" type="button">Letzte 10</button>
+          <button id="btnCopyJSON" class="secondary smallbtn" type="button">JSON kopieren</button>
+          <button id="btnClearAdmin" class="danger smallbtn" type="button">Leeren</button>
+        </div>
+        <div id="adminBox" class="hint" style="margin-top:10px"></div>
+
+        <div class="divider"></div>
+        <div class="hint">
+          <b>Setup:</b> Firebase → Firestore aktivieren → Web-App → <code>firebaseConfig</code> unten eintragen.<br/>
+          Dann GitHub Pages aktivieren: Repo → Settings → Pages → Deploy from branch → main → /root.
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="card">
+        <div class="sectionTitle">Eingabe-Felder</div>
+        <div class="hint">Dit sind die Felder passend zu deinen Google Forms. Pflicht is Pflicht, wa.</div>
+        <div class="divider"></div>
+
+        <div id="fields" class="row"></div>
+
+        <!-- Temperature grid -->
+        <div id="tempGridBox" style="display:none">
+          <div class="divider"></div>
+          <div class="sectionTitle">Temperatur-Grid (mehrere Geräte)</div>
+          <div class="hint">
+            Pro Gerät genau eine Temperatur auswählen. Wenn dit Gerät heute nich dran war: „—“ lassen.
+          </div>
+          <div class="tablewrap" style="margin-top:10px">
+            <table id="tempTable" aria-label="Temperaturtabelle">
+              <thead>
+                <tr>
+                  <th style="width:28%">Gerät</th>
+                  <th>—</th>
+                  <th>-18 °C</th>
+                  <th>-5 °C</th>
+                  <th>4/5 °C</th>
+                  <th>8 °C</th>
+                </tr>
+              </thead>
+              <tbody id="tempTbody"></tbody>
+            </table>
+          </div>
+
+          <div class="divider"></div>
+          <div class="hint dangerNote">
+            Wenn du bei irgendeinem Gerät <b>8 °C</b> auswählst, schreib bitte in „Bemerkung“ kurz die Maßnahme (Tür offen, Ware umgelagert, Nachmessung, …).
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import {
+      getFirestore, collection, addDoc, serverTimestamp,
+      query, orderBy, limit, getDocs
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    // ✅ HIER EINTRAGEN (Firebase -> Project Settings -> Web App)
+    const firebaseConfig = {
+      apiKey: "REPLACE_ME",
+      authDomain: "REPLACE_ME",
+      projectId: "REPLACE_ME",
+      storageBucket: "REPLACE_ME",
+      messagingSenderId: "REPLACE_ME",
+      appId: "REPLACE_ME"
+    };
+
+    // Deine 4 Google Forms Links (nur zur Referenz / Quick-Open)
+    const GOOGLE_FORMS = {
+      pests: "https://docs.google.com/forms/d/e/1FAIpQLSeeqdi94Z0KDsJsWcOzcAJ9R1x8htANPKwXEYxBgooVXl15nA/viewform?usp=dialog",
+      cleaning: "https://docs.google.com/forms/d/e/1FAIpQLSf-G1uEtn7MLzrGylCcACOlVDWtBaYKBSfdogs9aRr4p2lIdQ/viewform?usp=dialog",
+      temps: "https://docs.google.com/forms/d/e/1FAIpQLSdEBIZuuxJflMCmGMjJgZ95DSvwBazmiDue7crlxRKke3SI6A/viewform?usp=dialog",
+      briefing: "https://docs.google.com/forms/d/e/1FAIpQLScwc6VYGa_f1zciMVFnJ9DyBki3FNdTi4q47KAh97iYe5o_Xg/viewform?usp=dialog"
+    };
+
+    // Temperature devices and choices (match your form's visible options)
+    const TEMP_DEVICES = [
+      "Gefrierschrank 1 Lager",
+      "Gefrierschrank 2 Lager",
+      "Kühlschrank Lager",
+      "Kühl-/Gefrierkombi Küche (Normal)",
+      "Kühl-/Gefrierkombi Küche (TK)",
+      "Bierkühlung Tresen"
+    ];
+    const TEMP_CHOICES = ["-18 °C", "-5 °C", "4/5 °C", "8 °C"];
+
+    // --- Form-Definitionen passend zu den sichtbaren Fragen/Optionen deiner Forms
+    const FORMS = [
+      {
+        key: "pests",
+        title: 'Schädlingskontrolle // Vorbeugung (wöchentlich)',
+        link: GOOGLE_FORMS.pests,
+        sections: [
+          {
+            title: "Kontrolle",
+            fields: [
+              { key:"datumKontrolle", label:"Datum der Kontrolle", type:"date", required:true },
+              { key:"raum", label:"Räume", type:"select", required:true, options:[
+                "Küche","Gasträume","Gäste WC","Personal WC","Terassenbereich","Bierkeller","Kühlung"
+              ]},
+              { key:"ergebnis", label:"Kontrollergebnis", type:"select", required:true, options:["ohne Mängel","Mängel"]},
+              { key:"bemerkung", label:"Bemerkungen (optional)", type:"textarea", required:false,
+                placeholder:"z.B. Spuren entdeckt? Wo? Welche Maßnahme eingeleitet?" }
+            ]
+          }
+        ]
+      },
+      {
+        key: "cleaning",
+        title: "Reinigungs- und Desinfektionsplan",
+        link: GOOGLE_FORMS.cleaning,
+        sections: [
+          {
+            title: "Durchführung",
+            fields: [
+              { key:"verantwortlich", label:"Verantwortliche Person", type:"select", required:true, options:[
+                "Oliver Schönrock","Ronny Schönrock"
+              ]},
+              { key:"datum", label:"Datum", type:"date", required:true },
+              { key:"uhrzeit", label:"Uhrzeit", type:"time", required:true },
+              { key:"raeume", label:"Räume", type:"multiselect", required:true, options:[
+                "Küche","Kühlung","Personal WC","Gäste WC","Tresen","Gasträume","Keller","Bierkeller"
+              ]},
+              { key:"mittel", label:"Reinigungsmittel / Desinfektionsmittel", type:"select", required:true, options:[
+                "Oberflächenreinigung (Wasser / Reinigungsmittel)",
+                "Flächendesinfektion",
+                "Glasreiniger",
+                "Alkohol- / Glanzreiniger"
+              ]},
+              { key:"bemerkungen", label:"Bemerkungen", type:"textarea", required:false,
+                placeholder:"Optional: was auffällig? Nacharbeit? Besonderheiten?" }
+            ]
+          }
+        ]
+      },
+      {
+        key: "temps",
+        title: 'Kühltemperaturen Gasthaus "Zur Erholung"',
+        link: GOOGLE_FORMS.temps,
+        sections: [
+          {
+            title: "Kontrolle",
+            fields: [
+              { key:"kontrolleur", label:"Kontrolle durchgeführt von", type:"select", required:true, options:[
+                "Ronny Schönrock","Oliver Schönrock"
+              ]},
+              { key:"bemerkung", label:"Bemerkungen (optional)", type:"textarea", required:false,
+                placeholder:"z.B. Auffälligkeit, Tür stand offen, Nachkontrolle geplant…" }
+            ]
+          }
+        ]
+      },
+      {
+        key: "briefing",
+        title: "Belehrung nach §43 Abs. 1 Nr. 1 IFSG - Arbeitsschutz & Lebensmittelhygiene",
+        link: GOOGLE_FORMS.briefing,
+        sections: [
+          {
+            title: "Belehrung",
+            fields: [
+              { key:"unterweisung", label:"Welche Unterweisung wurde durchgeführt", type:"select", required:true,
+                options:["IFSG","ABS","Lebensmittelhygiene"] },
+              { key:"mitarbeiter", label:"Welche Mitarbeiter waren anwesend?", type:"multiselect", required:false,
+                options:["Oliver Schönrock","Ronny Schönrock"] },
+              { key:"bemerkung", label:"Bemerkung (optional)", type:"textarea", required:false,
+                placeholder:"Optional: Inhalte/Schwerpunkte, Besonderheiten, Unterschrift-Hinweis…" }
+            ]
+          }
+        ]
+      }
+    ];
+
+    // --- UI helpers
+    const el = (id) => document.getElementById(id);
+    const formSelect = el("formSelect");
+    const fieldsWrap = el("fields");
+    const statusEl = el("status");
+    const adminBox = el("adminBox");
+    const dbStatusEl = el("dbStatus");
+    const lastSaveEl = el("lastSave");
+    const formMetaLinks = el("formMetaLinks");
+    const tempGridBox = el("tempGridBox");
+    const tempTbody = el("tempTbody");
+
+    let db = null;
+    let lastRowsCache = [];
+
+    // holds chosen temps per device in grid
+    let tempSelections = {}; // {device: value|null}
+
+    function setStatus(msg, kind=""){
+      statusEl.className = "status " + (kind === "ok" ? "ok" : kind === "bad" ? "bad" : "");
+      statusEl.textContent = msg;
+    }
+    function setDbStatus(msg, kind=""){
+      dbStatusEl.style.color = kind === "ok" ? "var(--ok)" : kind === "bad" ? "var(--bad)" : "var(--text)";
+      dbStatusEl.textContent = msg;
+    }
+    function setLastSave(msg){ lastSaveEl.textContent = msg || "—"; }
+
+    function pad(n){ return String(n).padStart(2,"0"); }
+    function todayISO(){
+      const d = new Date();
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    }
+    function nowTime(){
+      const d = new Date();
+      return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+    function isoNow(){ return new Date().toISOString(); }
+
+    function currentForm(){
+      return FORMS.find(f => f.key === formSelect.value) || FORMS[0];
+    }
+
+    function renderFormOptions(){
+      formSelect.innerHTML = "";
+      FORMS.forEach(f => {
+        const opt = document.createElement("option");
+        opt.value = f.key;
+        opt.textContent = f.title;
+        formSelect.appendChild(opt);
+      });
+    }
+
+    function renderMetaLinks(){
+      const f = currentForm();
+      const short = {
+        pests: "Schädlingskontrolle",
+        cleaning: "Reinigungsplan",
+        temps: "Kühltemperaturen",
+        briefing: "Belehrung"
+      }[f.key] || "Google Form";
+
+      formMetaLinks.innerHTML = `
+        <div class="hint">
+          <span class="chip">${short}</span>
+          &nbsp; • &nbsp;
+          <a class="link" href="${f.link}" target="_blank" rel="noopener">Original Google Form öffnen</a>
+        </div>
+      `;
+    }
+
+    function fieldNode(field){
+      const wrap = document.createElement("div");
+
+      const lab = document.createElement("label");
+      lab.textContent = field.label;
+      if (field.required) lab.classList.add("req");
+      wrap.appendChild(lab);
+
+      let node;
+
+      if (field.type === "textarea"){
+        node = document.createElement("textarea");
+        if (field.placeholder) node.placeholder = field.placeholder;
+      } else if (field.type === "select"){
+        node = document.createElement("select");
+        (field.options || []).forEach(v => {
+          const o = document.createElement("option");
+          o.value = v; o.textContent = v;
+          node.appendChild(o);
+        });
+      } else if (field.type === "multiselect"){
+        node = document.createElement("div");
+        node.className = "gridlist";
+        (field.options || []).forEach(v => {
+          const line = document.createElement("div");
+          line.className = "checkline";
+          const cb = document.createElement("input");
+          cb.type = "checkbox";
+          cb.dataset.key = field.key;
+          cb.value = v;
+          const span = document.createElement("div");
+          span.textContent = v;
+          line.appendChild(cb);
+          line.appendChild(span);
+          node.appendChild(line);
+        });
+      } else {
+        node = document.createElement("input");
+        node.type = field.type || "text";
+      }
+
+      node.dataset.key = field.key;
+      node.dataset.type = field.type || node.type;
+      node.dataset.required = field.required ? "1" : "0";
+
+      wrap.appendChild(node);
+      return wrap;
+    }
+
+    function renderTempGrid(){
+      tempTbody.innerHTML = "";
+      tempSelections = {};
+      TEMP_DEVICES.forEach((device, i) => {
+        tempSelections[device] = null;
+        const tr = document.createElement("tr");
+
+        const tdDev = document.createElement("td");
+        tdDev.innerHTML = `<div class="tdev">${device}</div>`;
+        tr.appendChild(tdDev);
+
+        // "—" option
+        const tdNone = document.createElement("td");
+        tdNone.appendChild(makeRadio(device, "", `none_${i}`));
+        tr.appendChild(tdNone);
+
+        TEMP_CHOICES.forEach((choice, j) => {
+          const td = document.createElement("td");
+          td.appendChild(makeRadio(device, choice, `c_${i}_${j}`));
+          tr.appendChild(td);
+        });
+
+        tempTbody.appendChild(tr);
+      });
+    }
+
+    function makeRadio(device, value, idSuffix){
+      const wrap = document.createElement("div");
+      wrap.className = "radioChip";
+
+      const id = `t_${idSuffix}`;
+      const r = document.createElement("input");
+      r.type = "radio";
+      r.name = `temp_${device}`;
+      r.id = id;
+      r.value = value; // "" means none
+      r.addEventListener("change", () => {
+        tempSelections[device] = value || null;
+      });
+
+      const lab = document.createElement("label");
+      lab.setAttribute("for", id);
+      lab.style.cursor = "pointer";
+      lab.textContent = value === "" ? "—" : value;
+
+      wrap.appendChild(r);
+      wrap.appendChild(lab);
+      return wrap;
+    }
+
+    function renderFields(){
+      const f = currentForm();
+      fieldsWrap.innerHTML = "";
+
+      f.sections.forEach(sec => {
+        const head = document.createElement("div");
+        head.style.gridColumn = "1 / -1";
+        head.innerHTML = `<div class="pill" style="margin-bottom:6px">${sec.title}</div>`;
+        fieldsWrap.appendChild(head);
+
+        sec.fields.forEach(field => fieldsWrap.appendChild(fieldNode(field)));
+
+        const div = document.createElement("div");
+        div.style.gridColumn = "1 / -1";
+        div.innerHTML = `<div class="divider"></div>`;
+        fieldsWrap.appendChild(div);
+      });
+
+      const count = f.sections.reduce((a,s)=>a+s.fields.length,0);
+      fieldsWrap.className = count >= 6 ? "row two" : "row";
+
+      if (f.key === "temps"){
+        tempGridBox.style.display = "block";
+        renderTempGrid();
+      } else {
+        tempGridBox.style.display = "none";
+        tempSelections = {};
+      }
+
+      renderMetaLinks();
+      setStatus(`Ausgewählt: ${f.title}.`, "");
+    }
+
+    function validate(){
+      const md = el("metaDate").value;
+      if (!md) return { ok:false, msg:"Datum fehlt." };
+
+      const f = currentForm();
+
+      for (const sec of f.sections){
+        for (const field of sec.fields){
+          if (!field.required) continue;
+
+          if (field.type === "multiselect"){
+            const boxes = [...fieldsWrap.querySelectorAll(`input[type="checkbox"][data-key="${field.key}"]`)];
+            const any = boxes.some(b => b.checked);
+            if (!any) return { ok:false, msg:`Pflichtfeld leer: ${field.label}` };
+            continue;
+          }
+
+          const node = fieldsWrap.querySelector(`[data-key="${field.key}"]`);
+          if (!node) continue;
+          const val = (node.value ?? "").trim();
+          if (!val) return { ok:false, msg:`Pflichtfeld leer: ${field.label}` };
+        }
+      }
+
+      // Schädlingskontrolle: Mängel => Bemerkung Pflicht
+      if (f.key === "pests"){
+        const ergebnis = fieldsWrap.querySelector('[data-key="ergebnis"]')?.value || "";
+        const bem = fieldsWrap.querySelector('[data-key="bemerkung"]');
+        if (ergebnis === "Mängel" && bem && !String(bem.value||"").trim()){
+          return { ok:false, msg:"Bei 'Mängel' bitte Bemerkung/Maßnahme dokumentieren." };
+        }
+      }
+
+      // Temperaturen: at least 1 device measured in grid
+      if (f.key === "temps"){
+        const any = Object.values(tempSelections).some(v => v !== null);
+        if (!any){
+          return { ok:false, msg:"Bitte mindestens ein Gerät im Temperatur-Grid auswählen." };
+        }
+        // If any 8 °C, require remark
+        const any8 = Object.values(tempSelections).some(v => v === "8 °C");
+        const remark = fieldsWrap.querySelector('[data-key="bemerkung"]')?.value || "";
+        if (any8 && !String(remark).trim()){
+          return { ok:false, msg:"Bei 8 °C bitte eine Bemerkung/Maßnahme eintragen." };
+        }
+      }
+
+      return { ok:true };
+    }
+
+    function collectPayload(){
+      const f = currentForm();
+      const payload = {
+        createdAtIso: isoNow(),
+        meta: {
+          date: el("metaDate").value || "",
+          time: el("metaTime").value || "",
+          by: el("metaBy").value || "",
+          note: el("metaNote").value || ""
+        },
+        form: { key: f.key, title: f.title, googleFormLink: f.link },
+        data: {},
+        extras: {}
+      };
+
+      // normal + multiselect
+      f.sections.forEach(sec => {
+        sec.fields.forEach(field => {
+          if (field.type === "multiselect"){
+            const boxes = [...fieldsWrap.querySelectorAll(`input[type="checkbox"][data-key="${field.key}"]`)];
+            payload.data[field.key] = boxes.filter(b => b.checked).map(b => b.value);
+          } else {
+            const node = fieldsWrap.querySelector(`[data-key="${field.key}"]`);
+            payload.data[field.key] = node ? (node.value ?? "") : "";
+          }
+        });
+      });
+
+      if (f.key === "temps"){
+        // store grid as object + list for easy export
+        const grid = {};
+        const list = [];
+        TEMP_DEVICES.forEach(dev => {
+          const v = tempSelections[dev] || null;
+          grid[dev] = v;
+          if (v !== null) list.push({ device: dev, temp: v });
+        });
+        payload.extras.temperatureGrid = grid;
+        payload.extras.temperatureList = list;
+      }
+
+      return payload;
+    }
+
+    async function saveToDB(){
+      const v = validate();
+      if (!v.ok){
+        setStatus("❌ " + v.msg, "bad");
+        return;
+      }
+      if (!db){
+        setStatus("❌ Keine DB Verbindung (firebaseConfig prüfen).", "bad");
+        return;
+      }
+
+      const payload = collectPayload();
+      try{
+        const ref = await addDoc(collection(db, "submissions"), {
+          ...payload,
+          serverTimestamp: serverTimestamp()
+        });
+        setLastSave(`#${ref.id.slice(0,6)}…`);
+        setStatus("✅ Gespeichert! (Firestore) – dit sitzt.", "ok");
+      }catch(e){
+        setStatus("❌ Speichern fehlgeschlagen: " + (e?.message || String(e)), "bad");
+      }
+    }
+
+    function resetAll(){
+      el("metaDate").value = todayISO();
+      el("metaTime").value = nowTime();
+      el("metaBy").value = "";
+      el("metaNote").value = "";
+
+      fieldsWrap.querySelectorAll("input,textarea,select").forEach(node => {
+        if (node.type === "checkbox") node.checked = false;
+        else if (node.tagName === "SELECT") node.selectedIndex = 0;
+        else node.value = "";
+      });
+
+      if (currentForm().key === "temps"){
+        renderTempGrid();
+      }
+
+      setStatus("Zurückgesetzt. Nächste Kontrolle, wa.", "");
+    }
+
+    async function loadLast10(){
+      if (!db){
+        setStatus("❌ Keine DB Verbindung.", "bad");
+        return;
+      }
+      try{
+        const q = query(collection(db, "submissions"), orderBy("serverTimestamp","desc"), limit(10));
+        const snap = await getDocs(q);
+        const rows = [];
+        snap.forEach(doc => rows.push({ id: doc.id, ...doc.data() }));
+        lastRowsCache = rows;
+
+        if (!rows.length){
+          adminBox.innerHTML = `<div class="muted">Noch keine Einträge.</div>`;
+          return;
+        }
+
+        adminBox.innerHTML = rows.map(r => {
+          const t = r.form?.title || "—";
+          const d = r.meta?.date || "";
+          const by = r.meta?.by || "";
+          return `<div class="checkline"><div style="flex:1">
+              <b>${t}</b>
+              <div class="muted" style="font-size:12px">${d} • ${by} • ID ${r.id.slice(0,8)}…</div>
+            </div></div>`;
+        }).join("");
+
+        setStatus("✅ Letzte 10 geladen.", "ok");
+      }catch(e){
+        setStatus("❌ Laden fehlgeschlagen (Rules?): " + (e?.message || String(e)), "bad");
+      }
+    }
+
+    async function copyLastJSON(){
+      if (!lastRowsCache.length){
+        setStatus("Erst 'Letzte 10' laden, sonst hab ick nüscht zum Kopieren 😄", "");
+        return;
+      }
+      const txt = JSON.stringify(lastRowsCache, null, 2);
+      try{
+        await navigator.clipboard.writeText(txt);
+        setStatus("✅ JSON kopiert.", "ok");
+      }catch{
+        setStatus("Kopieren ging nich (Browser zickt). Markier manuell im Adminbereich.", "");
+      }
+    }
+
+    // --- init Firebase
+    try{
+      const app = initializeApp(firebaseConfig);
+      db = getFirestore(app);
+      setDbStatus("Verbunden", "ok");
+      setStatus("DB verbunden. Abfahrt.", "ok");
+    }catch(e){
+      setDbStatus("Nicht verbunden", "bad");
+      setStatus("❌ firebaseConfig fehlt/kaputt. Erst eintragen, dann läuft’s.", "bad");
+    }
+
+    // --- init UI
+    renderFormOptions();
+    el("metaDate").value = todayISO();
+    el("metaTime").value = nowTime();
+    renderFields();
+
+    formSelect.addEventListener("change", renderFields);
+    el("btnSave").addEventListener("click", saveToDB);
+    el("btnReset").addEventListener("click", resetAll);
+    el("btnLoadLast").addEventListener("click", loadLast10);
+    el("btnCopyJSON").addEventListener("click", copyLastJSON);
+    el("btnClearAdmin").addEventListener("click", () => { adminBox.innerHTML=""; lastRowsCache=[]; });
+  </script>
+</body>
+</html>
